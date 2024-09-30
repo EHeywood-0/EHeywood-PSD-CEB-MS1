@@ -1,1 +1,8 @@
-
+*.exe
+*.dll
+*.Rhistory
+*.DS_Store
+*.pyc
+*.pyo
+__pycache__/
+plots/
