@@ -185,7 +185,6 @@ impute_bathy = function(curssm, iter, prj, par_re, h_re, bathymetry, dives){
 
 ##'
 sample_path_reject <- function(x, bathymetry, dives, n = 1, tolerance = 2, stableiter = 200, progress = FALSE) {
-  require(aniMotum)
   require(purrr)
   # ensure n > 0
   stopifnot("n must be greater than 0" = (n > 0))

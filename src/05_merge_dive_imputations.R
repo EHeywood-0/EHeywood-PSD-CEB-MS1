@@ -22,6 +22,15 @@ data = data %>%
   mutate(totaldivespossible = n_dives_lost + n_dives_imputed) %>%
   mutate(percloss = n_dives_lost / totaldivespossible)
 
+
+datmerge = data[data$bathy_m < 0, ]
+View(head(datmerge))
+write_csv(x = datmerge, file = './data/L3/dive/Hg_2019-2023_DivePosEstimates_Imputations_BestEst.csv')
+
+
+###################################################################
+################### SCRATCH #######################################
+###################################################################
 # Merge in original 'best' estimates
 # og = read_csv("./data/L2/SSM/Hg-2019-2023-SSM-DivePositions.csv")
 # og$imputeiter = 0
@@ -43,7 +52,3 @@ data = data %>%
 # og = og[og$diveID %in% diveIDs, ]
 # og = og[!is.na(og$bathy_m),]
 #datmerge = bind_rows(og, data)
-datmerge = data[data$bathy_m < 0, ]
-View(head(datmerge))
-write_csv(x = datmerge, file = './data/L3/dive/Hg_2019-2023_DivePosEstimates_Imputations_BestEst.csv')
-#write_csv(x = data, file = './Hg_2019-2023_DivePositionEstimates_SSMImputations.csv')

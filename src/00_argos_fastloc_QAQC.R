@@ -85,8 +85,10 @@ for (i in 1:length(fastloc_ptts)){
   
 }
 
+# all the fastloc location data
 merged_fltags = do.call(rbind, storageL)
 
+# argos only location data
 argosdata = locs[!locs$ptt %in% fastloc_ptts, ]
 
 # Recombine the merged fastloc data and the argos only tags

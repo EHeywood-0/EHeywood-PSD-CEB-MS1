@@ -2,6 +2,8 @@
 # EIH
 # 2024-05-17
 
+rm(list = ls())
+gc()
 setwd('~/seal_telemetry/')
 library(parallel)
 library(dplyr)
@@ -29,13 +31,20 @@ mclapply(X = 1:nrow(segfits), FUN = function(x){
 load(file = './data/L2/SSM/Hg-2019-2023-SSM-DivePosition_modelobjects_refits.RData')
 
 mclapply(X = 1:nrow(segrefits), FUN = function(x){
-  plot_ssm_diags(segrefits[x, ], writedir = './plots/ssm_dive_diags/', model = 'rw')
+  plot_ssm_diags(segrefits[x, ], writedir = './plots/ssm_validation/ssm_dive_diags/', model = 'rw')
 })
 
 load(file = './data/L2/SSM/Hg-2019-2023-SSM-DivePosition_modelobjects_fits.RData')
-
-mclapply(X = 1:nrow(segrefits), FUN = function(x){
-  plot_ssm_diags(segrefits[x, ], writedir = './plots/ssm_dive_diags/', model = 'rw')
+# plts = list.files("./plots/ssm_validation/ssm_dive_diags")
+# plts = trimws(plts, which = 'both')
+# tripnames = sapply(strsplit(plts, ' '), '[[', 1)
+# plts
+# 
+# plts[duplicated(tripnames)]
+# missing = setdiff(fits$id, tripnames)
+# which(fits$id %in% missing)
+mclapply(X = 1:nrow(fits), FUN = function(x){
+  plot_ssm_diags(fits[x, ], writedir = './plots/ssm_validation/ssm_dive_diags/', model = 'crw')
 })
 
 

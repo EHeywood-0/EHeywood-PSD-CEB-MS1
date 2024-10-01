@@ -11,15 +11,9 @@ library(readr)
 library(tidyr)
 library(sf)
 library(stars)
-library(aniMotum)
-
-#install.packages("aniMotum", repos = c("https://ianjonsen.r-universe.dev", "https://cloud.r-project.org"))
 
 setwd('~/seal_telemetry/')
 
-# Source necessary functions for rejection sampling
-source('./READ-PSB-MoveSeals/src/fxns_rejection_sampling.R') 
-rm(list = setdiff(ls(), c('rmvnorm_prec', 'sample_path_reject', 'impute_bathy')))
 ######################################################### LOAD VARS #####################################################################
 data = read_csv("./data/L2/SSM/Hg-2019-2023-SSM-DivePositions.csv")
 dives = data %>% dplyr::select(SegID, diveID, date, DiveDur, IDI, Depth)
@@ -52,6 +46,10 @@ fits = parres[which(!names(parres) %in% finishedIDs)]
 library(future)
 library(furrr)
 
+rm(list = setdiff(ls(), c('fits', 'dives', 'bathymetry')))
+
+# Source necessary functions for rejection sampling
+source('./READ-PSB-MoveSeals/src/fxns_rejection_sampling.R') 
 
 niter = 100
 tol <- 3
@@ -60,20 +58,23 @@ stablei <- 100
 #Detect the number of logical cores
 num_cores <- parallelly::availableCores(logical = TRUE)
 num_workers = round(0.85*num_cores, 0)
+options(future.globals.maxSize = 3000 * 1024^2)
 
 # Set up the future plan for parallel execution
 future::plan(multisession, workers = num_workers)  # or any other plan like multicore, cluster, etc.
 
-result2 = furrr::future_map_dfr(.x = seq_along(fits), .options = furrr_options(seed=TRUE),.f = function(.x){
+furrr::future_map_dfr(.x = seq_along(fits), .progress = TRUE,.options = furrr_options(seed=TRUE),.f = function(.x){
   
   
-  res = sample_path_reject(x = fits[[.x]],
-                           bathymetry = bathymetry,
-                           dives = dives,
-                           n = niter,
-                           tolerance = tol,
-                           stableiter = stablei,
-                           progress = FALSE)
+  progressr::with_progress({
+    res = sample_path_reject(x = fits[[.x]],
+                             bathymetry = bathymetry,
+                             dives = dives,
+                             n = niter,
+                             tolerance = tol,
+                             stableiter = 10,
+                             progress = TRUE)
+  })
   
   numdives = nrow(fits[[.x]]$predicted)
   res2 = res %>% st_drop_geometry() %>% mutate(x = sample_x, y = sample_y) %>%

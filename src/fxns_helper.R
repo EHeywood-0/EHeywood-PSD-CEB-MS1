@@ -126,6 +126,95 @@ plot_ssm_diags = function(ssm_df, writedir, model = 'crw') {
 }
 
 
+# DEFINE VOLUME CONTOUR FUNCTION
+# ---- roxygen documentation ----
+#' @title Volume contour from Raster
+#'
+#' @description
+#'   Compute a percent volume contour polygon from a raster UD.
+#' @details
+#'   The volras function is a simpler version of the getvolumeUD function from the package \code{adehabitatHR} developed by C. Calenge. It allows the output to be a 'raster looking' polygon (i.e., the cells that are within the UD) or a simplified (smoothed) polygon.
+#'   
+#' @param x a \code{RasterLayer}
+#' @param percent a percent value to get the volume contour, e.g., 95. Note: This is a simple function and only accepts one value at a time.
+#' @param simplify (logical; default = TRUE) whether or not to simplify the output home range polygon using \code{gSimplify} from \code{rgeos} with a tolerance value of 1.5 times the spatial resolution of the UD. 
+#' 
+#' @return
+#'   A \code{SpatialPolygonsDataFrame}.
+#'
+#' @seealso fbtgUD, rspUD, tgkde
+#' @examples
+#' data(m3)
+#' ud <- tgkde(m3,disfun='inv',method='vanderWatt')
+#' raster::plot(ud)
+#' hr <- volras(ud,95)
+#' sp::plot(hr,add=TRUE)
+#' 
+#' @export
+#
+# ---- End of roxygen documentation ----
+
+volras <- function(x,percent=95, simplify=TRUE, returnwhat = 'both'){
+  
+  
+  require(smoothr)
+  require(sf)
+  require(raster)
+  
+  x[is.na(x)] <- 0
+  pfs <- raster::crs(x)
+  
+  ## standardize it so that the total volume is 1 over the area
+  v <- as.vector(values(x))
+  index<-1:length(v)
+  vord<-v[order(v, decreasing=TRUE)]
+  vsu<-cumsum(vord)
+  
+  cont <- which(vsu > (percent/100)*max(vsu))[1]
+  cont.lev <- vord[cont]
+  
+  #Get all the cells above the cont.lev and make 1
+  m <- c(0, cont.lev, 0, cont.lev, max(x[]), 1)
+  rclmat <- matrix(m, ncol=3, byrow=TRUE)
+  xr <- raster::reclassify(x, rclmat)
+  
+  #Convert to polygon and simplify if desired
+  if (returnwhat %in% c('polygon', 'both')){
+    hr <- st_as_sf(raster::rasterToPolygons(xr,
+                                            fun=function(x){x==1},
+                                            n = 4, dissolve=TRUE, 
+                                            digits = 4))
+    
+    if(simplify){
+      hr <- smoothr::smooth(x = hr, method = 'ksmooth', smoothness = 5)
+    }
+    
+    if(returnwhat == 'polygon'){
+      return(hr)
+    }
+    
+  }
+  
+  if (returnwhat %in% c('area', 'both')){
+    
+    # sum reclassified raster to get the number of cells in contour
+    numcells = as.numeric(raster::cellStats(x = xr, stat = 'sum', na.rm=T))
+    resolution = res(xr)
+    resolutionsqkm = round(resolution[1] * resolution[2] / 1000000, digits = 0)
+    areasqkm = numcells * resolutionsqkm
+    
+    if(returnwhat == 'area'){
+      return(areasqkm)
+    }
+    
+  }
+  
+  if(returnwhat == 'both'){
+    return(list(hr, areasqkm))
+  }
+  
+}
+
 
 
 
