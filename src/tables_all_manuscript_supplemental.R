@@ -213,7 +213,7 @@ save_as_docx(ft, path = "./plots/manuscript/TableS2.docx", pr_section = sect_pro
 ##################################################################################################################################
 rm(list = setdiff(ls(), 'sect_properties'))
 
-ho = read_csv('./data/L1/haulout/Hg_2019-2023_BEH_Histos_Spatial_HauloutMethods_NoOverlap.csv') %>% 
+ho = read_csv('./data/L1/haulout/Hg_2019-2023_ALL_HauloutMethods_Merged.csv') %>% 
   filter(ho_dur_hours > 0, ptt != 194405, ptt!=194406) 
 ho$ptt = as.character(ho$ptt)
 ho$year = format(ho$deploydate, '%Y')

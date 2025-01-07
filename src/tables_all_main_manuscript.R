@@ -170,7 +170,7 @@ rm(udareas, tm)
 
 # SEASONAL TRACKING DATA DURS FOR HAULOUT PERCENT TIME CALCS
 # READ IN HAULOUT DATA - ptts 194405 and 194406 did not produce any trip data so eliminate
-ho = read_csv('./data/L1/haulout/Hg_2019-2023_BEH_Histos_Spatial_HauloutMethods_NoOverlap.csv') %>% 
+ho = read_csv('./data/L1/haulout/Hg_2019-2023_ALL_HauloutMethods_Merged.csv') %>% 
   filter(ho_dur_hours > 0, ptt != 194405, ptt!=194406) %>% mutate(Month = format(startho, '%b')) %>% filter(Month != 'Dec') %>%
   mutate(Season = case_when(Month %in% c('Jan','Feb') ~ 'Winter',
                             Month %in% c('Mar', 'Apr', 'May') ~ 'Spring',
@@ -239,7 +239,10 @@ gsum = dat %>%
             `Distance to Shore (km)` = paste0(format(round(median(MeanDisttoShore, na.rm = T), digits = 1), nsmall = 1), 
                                               " (", 
                                               format(round(IQR(MeanDisttoShore, na.rm=T), digits = 1), nsmall = 1), ")"),
-            `N Trips in WEA` = length(unique(TripID[Probability_in_Wea > 0])),
+            `N Trips in WEA` = paste0(format(round(length(unique(TripID[Probability_in_Wea > 0])), digits = 0)), 
+                                      ' (',
+                                      format(round(length(unique(TripID[Probability_in_Wea > 0])) / length(unique(TripID))*100, digits = 0)),
+                                      "%)"),
             `Prob. of Trip in WEA` = paste0(format(round(median(Probability_in_Wea, na.rm = T), digits = 2), nsmall = 2), 
                                             " (", 
                                             format(round(IQR(Probability_in_Wea, na.rm=T), digits = 2), nsmall = 2), ")")
@@ -272,7 +275,10 @@ tot = dat %>% ungroup() %>% group_by(sex) %>%
             `Distance to Shore (km)` = paste0(format(round(median(MeanDisttoShore, na.rm = T), digits = 1), nsmall = 1), 
                                               " (", 
                                               format(round(IQR(MeanDisttoShore, na.rm=T), digits = 1), nsmall = 1), ")"),
-            `N Trips in WEA` = length(unique(TripID[Probability_in_Wea > 0])),
+            `N Trips in WEA` = paste0(format(round(length(unique(TripID[Probability_in_Wea > 0])), digits = 0)), 
+                                      ' (',
+                                      format(round(length(unique(TripID[Probability_in_Wea > 0])) / length(unique(TripID))*100, digits = 0)),
+                                      "%)"),,
             `Prob. of Trip in WEA` = paste0(format(round(median(Probability_in_Wea, na.rm = T), digits = 2), nsmall = 2), 
                                             " (", 
                                             format(round(IQR(Probability_in_Wea, na.rm=T), digits = 2), nsmall = 2), ")")

@@ -26,7 +26,7 @@ land = land[which(land$postal %in% c("ME", "NH", "VT", "RI", "CT", "MA", "PA", "
 plot(land['featurecla'])
 
 # Now minor islands (islands less than 2 square km)
-minor_islands = st_read("../READ-PSB-MoveSeals/ne_10m_minor_islands/ne_10m_minor_islands.shp") %>%
+minor_islands = st_read("./shapefiles/ne_10m_minor_islands/ne_10m_minor_islands.shp") %>%
   mutate(name = featurecla) %>%
   dplyr::select(name, geometry)
 
@@ -60,11 +60,7 @@ bf = marmap::fortify.bathy(bathy)
 
 
 # WEAs
-we = st_read(".//shapefiles/BOEM_Wind_Leases_8_30_2023.shp")
-we = st_intersection(we, bounding_box)
-plot(we['STATE'])
-
-we = st_union(we)
+we = st_read("./shapefiles/Wind_Lease_Boundaries__BOEM__2025-01-01/Offshore_Wind_Lease_Outlines_Northeast_Dissolve.shp")
 
 gc()
 ####################################################### END DATA LOAD #######################################################
@@ -184,88 +180,10 @@ second_half <- colorRampPalette(c("#d6c2a1", "#cbb493", "#bfa785", "#b49a77",
 custom_palette <- c(first_half, second_half)
 
 
-# Probability Benthic by Season
-# g = ggplot(data = resl) +
-#   
-#   # Add 200m contour
-#   geom_contour(data = bf, 
-#                aes(x=x, y=y, z=z),
-#                breaks=c(-200),
-#                linewidth=c(0.3),
-#                colour="gray10", lty = 1)+
-#   
-#   # Add raster
-#   geom_sf(data = resl, mapping = aes(fill = PropBenthic, color = PropBenthic), alpha = 0.75) +
-#    
-#   #scale_fill_scico(palette = 'brocO', alpha = 0.85, direction = 1) +
-#   #scale_color_scico(palette = 'brocO', alpha = 0.85, direction = 1) +
-#   scale_fill_gradientn(colors = custom_palette, 
-#                        guide = guide_colorbar(theme = theme(legend.title.position = 'top',
-#                                                             legend.key.width = unit(2.5, 'in')), 
-#                                               title = 'Proportion Benthic / Demersal Diving', direction = 'horizontal')) +
-#   scale_color_gradientn(colors = custom_palette, ) +
-#   # Add depth contours
-#   geom_contour(data = bf, 
-#                aes(x=x, y=y, z=z),
-#                breaks=c(-50),
-#                linewidth=c(0.3),
-#                colour="gray1", lty = 3)+
-#   
-#   
-#   # Add wind energy areas
-#   geom_sf(data = we, color = "orangered3", fill = NA, linewidth = 0.5) +
-#   
-#   # Add land
-#   geom_sf(data = hires_land, fill = 'gray95', color = 'gray75') +  # Set fill to NA for background polygons
-#   
-#   
-#   coord_sf(xlim = c(-75, -63.5), ylim = c(38.75, 45)) +
-#   
-#   theme_bw() +
-#   
-#   guides(color = 'none') +
-#   
-#   xlab(NULL) +  # Remove x-axis label
-#   ylab(NULL) +  # Remove y-axis label
-#   ggtitle(NULL) +  # Remove plot title
-#   
-#   # remove title, axis text, legend, set text size, remove facet title strips 
-#   theme(axis.text = element_blank(), 
-#         text = element_text(size=18),
-#         strip.background.x = element_blank(),
-#         strip.text.x = element_blank(),
-#         strip.placement = 'outside',
-#         legend.direction = "horizontal") +
-#   facet_wrap(~Season, ncol = 2, labeller = as_labeller(custom_labeller))
-# 
-# 
-# g
-# 
-# 
-# shift_legend3 <- function(p) {
-#   pnls <- cowplot::plot_to_gtable(p) %>% gtable::gtable_filter("panel") %>%
-#     with(setNames(grobs, layout$name)) %>% purrr::keep(~identical(.x,zeroGrob()))
-# 
-#   if( length(pnls) == 0 ) stop( "No empty facets in the plot" )
-# 
-#   lemon::reposition_legend(p, "center", panel=names(pnls) )
-# }
-# 
-# gshift = shift_legend3(g)
-# 
-# ggsave(filename =  '../plots/manuscript/Hg_Pre-Construction-ProbBenthic_HexagonalTessellation.png',
-#        plot = gshift, device = 'png', dpi = 600, scale = 1, width = 10, height = 8)
-# 
-# 
-# ggsave(filename =  '../plots/manuscript/Hg_Pre-Construction-ProbBenthic_HexagonalTessellation.svg',
-#        plot = gshift, device = 'svg', dpi = 600, scale = 1, width = 10, height = 8)
-# 
-
-
 #################################################################################################################
 ############################################# Get Sediment Grain Sizes for 4th panel ############################
 #################################################################################################################
-sedi = raster::raster('C:/Users/Eleanor.heywood/Documents/ArcGIS/Projects/ManuscriptFigure1/SoftSediments.tif')
+sedi = raster::raster('C:/Users/Eleanor.heywood/Documents/ArcGIS/Projects/Heywood_ME_MS1_MapFigures/SoftSediments.tif')
 
 benthic = data
 benthic$SediGrainSize = raster::extract(x = sedi, y = benthic)
@@ -334,7 +252,7 @@ a = ggplot(data = resl[resl$Season == 'Winter',]) +
                colour="gray1", lty = 3)+
 
   # Add wind energy areas
-  geom_sf(data = we, color = "black", fill = NA, linewidth = 0.65) +
+  geom_sf(data = we, color = "cyan", fill = NA, linewidth = 0.65) +
   
   # Add land
   geom_sf(data = hires_land, fill = 'gray95', color = 'gray75') +  # Set fill to NA for background polygons
@@ -385,7 +303,7 @@ b = ggplot(data = resl[resl$Season == 'Spring',]) +
                colour="gray1", lty = 3)+
   
   # Add wind energy areas
-  geom_sf(data = we, color = "black", fill = NA, linewidth = 0.65) +
+  geom_sf(data = we, color = "cyan", fill = NA, linewidth = 0.65) +
   
   # Add land
   geom_sf(data = hires_land, fill = 'gray95', color = 'gray75') +  # Set fill to NA for background polygons
@@ -436,7 +354,7 @@ c = ggplot(data = resl[resl$Season == 'Summer',]) +
                colour="gray1", lty = 3)+
   
   # Add wind energy areas
-  geom_sf(data = we, color = "black", fill = NA, linewidth = 0.65) +
+  geom_sf(data = we, color = "cyan", fill = NA, linewidth = 0.65) +
   
   # Add land
   geom_sf(data = hires_land, fill = 'gray95', color = 'gray75') +  # Set fill to NA for background polygons
@@ -490,7 +408,7 @@ d = ggplot() +
                aes(x=x, y=y, z=z),
                breaks=c(-200),
                linewidth=c(0.3),
-               colour="gray10", lty = 1)+
+               colour="gray50", lty = 1)+
   
   # Add depth contours
   geom_contour(data = bf, 
@@ -500,7 +418,7 @@ d = ggplot() +
                colour="gray1", lty = 3)+
   
   # Add wind energy areas
-  geom_sf(data = we, color = "black", fill = NA, linewidth = 0.65) +
+  geom_sf(data = we, color = "cyan", fill = NA, linewidth = 0.65) +
   
   coord_sf(xlim = c(-75, -63.5), ylim = c(38.75, 45)) +
   theme_bw() +
@@ -534,7 +452,6 @@ e = e + theme(plot.margin = margin(0,0,0,0), text = element_text(size = 14), plo
 d = d + theme(plot.margin = margin(0,0,0,0), text = element_text(size = 14), legend.text = element_text(size = 9),
               plot.tag.location ='panel', legend.box.margin = margin(0,0,0,0), legend.background = element_blank(),
               legend.direction = 'vertical', legend.position.inside = c(0.87, 0.15))
-d
 library(patchwork)
 
 layout = '
@@ -544,9 +461,6 @@ EE
 '
 mainfig7 = wrap_plots(D = d, C = c, B = b, A=a, E=e, design = layout, heights = c(1,1,0.75), widths = c(1,1)) +
   plot_annotation(tag_levels = 'a')
-
-# mainfig7 = a + b + c + e + plot_layout(ncol = 2, nrow = 2) + 
-#   plot_annotation(tag_levels = 'a')
 
 mainfig7
 ggsave(filename = '../plots/manuscript/Hg_Pre-Construction-ProbBenthic_HexagonalTessellation_withSediment.pdf', 
@@ -568,285 +482,6 @@ ggsave(filename = '../plots/manuscript/Supplemental_SedimentGrainSize.pdf',
 
 #################################################################################################################
 #################################################################################################################
-################################################## SCRATCH ######################################################
+################################################## END ##########################################################
 #################################################################################################################
-####################################################### Minimum Convex Hull #################################################
-# # Create a MCP and then use it as the prediction grid for kriging
-# 
-# # Create MCP
-# data.mcp = st_convex_hull(x = st_union(data))
-# 
-# plot(data.mcp)
-# 
-# # Create bounding box and grid
-# grd = data.mcp %>% st_as_stars(dx = 5000) %>% st_crop(data.mcp)
 
-############################################# KRIGING ########################################################################
-
-# # Variogram - spatial predictions using geostatistical methods
-# 
-# v = variogram(PropWC~1, locations = data, data = data)
-# 
-# plot(v, plot.numbers = TRUE, xlab = "distance h [m]",
-#      ylab = expression(gamma(h)),
-#      xlim = c(0, 1.055 * max(v$dist)))
-# 
-# # Fit variogram model
-# v.m = fit.variogram(v, vgm(1, model = 'Exp', range = 50000, nugget = 1))
-# plot.new()
-# plot(v, v.m, cutoff = 30000, pch =20, col ="red")
-# 
-# # Kriging
-# rm(list = setdiff(ls(), c('v.m', 'v', 'data', 'grd', 'bathy_raster', 'bathy_stars', 'bathydf', 'landUTM')))
-# 
-# k = krige(formula = PropWC ~ 1, locations = data, newdata = grd, model = v.m, maxdist = 10000)
-# 
-# xlim = c(min(st_coordinates(data)[,1]) -1000, max(st_coordinates(data)[,1]) +1000)
-# ylim = c(min(st_coordinates(data)[,2])-1000, max(st_coordinates(data)[,2])+1000)
-# 
-# library(viridis)
-# g = ggplot() +  
-#   geom_stars(data = k, aes(fill = var1.pred, x = x, y = y), na.action = na.omit) +
-#   scale_fill_viridis(option = "E", name = 'Prop. Water Column') +
-#   xlab(NULL) + ylab(NULL) +
-#   geom_sf(data = landUTM) + 
-#   coord_sf(xlim = xlim, ylim = ylim) +
-#   theme_bw() +
-#   theme(legend.position = 'bottom') 
-#   
-# 
-# g
-# 
-# ggsave(filename = './plots/Hg-2019-2023-Continuous-DiveWaterColumn-Krige.jpeg', plot = g, device = 'jpeg', dpi = 300)
-# 
-# 
-# class(tmp)
-# g = ggplot() +  
-#   geom_stars(data = k, aes(fill = var1.pred, x = x, y = y), na.action = na.omit) +
-#   scale_fill_binned(type = 'viridis', breaks = c(0.05, 0.25, 0.50, 0.75, 0.95)) +
-#   xlab(NULL) + ylab(NULL) +
-#   geom_sf(data = landUTM) + 
-#   coord_sf(xlim = xlim, ylim = ylim) +
-#   theme_bw() 
-# 
-# g
-# 
-# 
-# ggsave(filename = './plots/Hg-2019-2023-Binned-DiveWaterColumn-Krige.jpeg', plot = g, device = 'jpeg', dpi = 300)
-# 
-# 
-# fulldatap = ggplot() +  geom_sf(data = data) +
-#   xlab(NULL) + ylab(NULL) +
-#   geom_sf(data = landUTM) + 
-#   coord_sf(xlim = xlim, ylim = ylim)
-
-# # Jan - March
-# data$Month = format(data$date, '%b')
-# 
-# 
-# winter = data[data$Month %in% c('Jan', 'Feb'),]
-# # Create MCP
-# data.mcp = st_convex_hull(x = st_union(winter))
-# 
-# plot(data.mcp)
-# 
-# # Create bounding box and grid
-# grd = data.mcp %>% st_as_stars(dx = 5000) %>% st_crop(data.mcp)
-# 
-# v = variogram(PropWC~1, locations = winter, data = winter)
-# 
-# plot(v, plot.numbers = TRUE, xlab = "distance h [m]",
-#      ylab = expression(gamma(h)),
-#      xlim = c(0, 1.055 * max(v$dist)))
-# 
-# # Fit variogram model
-# v.m = fit.variogram(v, vgm(1, model = 'Exp', range = 50000, nugget = 2))
-# plot.new()
-# plot(v, v.m, cutoff = 30000, pch =20, col ="red")
-# 
-# # Kriging
-# 
-# k = krige(formula = PropWC ~ 1, locations = winter, newdata = grd, model = v.m, maxdist = 10000)
-# 
-# 
-# g = ggplot() +  
-#   geom_stars(data = k, aes(fill = var1.pred, x = x, y = y), na.action = na.omit) +
-#   scale_fill_viridis(option = "E", name = 'Prop. Water Column') +
-#   xlab(NULL) + ylab(NULL) +
-#   geom_sf(data = landUTM) + 
-#   coord_sf(xlim = xlim, ylim = ylim) +
-#   theme_bw() +
-#   theme(legend.position = 'bottom') 
-# 
-# 
-# g
-# 
-# ggsave(filename = './plots/Hg-2019-2023-JANFEB-Continuous-DiveWaterColumn-Krige.jpeg', plot = g, device = 'jpeg', dpi = 300)
-# 
-# 
-# 
-# 
-# g = ggplot() +  
-#   geom_stars(data = k, aes(fill = var1.pred, x = x, y = y), na.action = na.omit) +
-#   scale_fill_binned(type = 'viridis', breaks = seq(0.25, 0.95, 0.10), name = 'Prop. Water Column') +
-#   xlab(NULL) + ylab(NULL) +
-#   geom_sf(data = landUTM) + 
-#   coord_sf(xlim = xlim, ylim = ylim) +
-#   theme_bw() +
-#   theme(legend.position = 'right') 
-# 
-# g
-# 
-# 
-# 
-# ##################### MARCH-May
-# winter = data[data$Month %in% c('Mar', 'Apr', 'May'),]
-# # Create MCP
-# data.mcp = st_convex_hull(x = st_union(winter))
-# 
-# plot(data.mcp)
-# 
-# # Create bounding box and grid
-# grd = data.mcp %>% st_as_stars(dx = 5000) %>% st_crop(data.mcp)
-# 
-# v = variogram(PropWC~1, locations = winter, data = winter)
-# 
-# plot(v, plot.numbers = TRUE, xlab = "distance h [m]",
-#      ylab = expression(gamma(h)),
-#      xlim = c(0, 1.055 * max(v$dist)))
-# 
-# # Fit variogram model
-# v.m = fit.variogram(v, vgm(1, model = "Sph", range = 50000, nugget = 1))
-# plot.new()
-# plot(v, v.m, cutoff = 30000, pch =20, col ="red")
-# 
-# # Kriging
-# 
-# k = krige(formula = PropWC ~ 1, locations = winter, newdata = grd, model = v.m, maxdist = 10000)
-# 
-# 
-# g = ggplot() +  
-#   geom_stars(data = k, aes(fill = var1.pred, x = x, y = y), na.action = na.omit) +
-#   scale_fill_viridis(option = "E", name = 'Prop. Water Column') +
-#   xlab(NULL) + ylab(NULL) +
-#   geom_sf(data = landUTM) + 
-#   coord_sf(xlim = xlim, ylim = ylim) +
-#   theme_bw() +
-#   theme(legend.position = 'bottom') 
-# 
-# 
-# g
-# 
-# ggsave(filename = './plots/Hg-2019-2023-JANFEB-Continuous-DiveWaterColumn-Krige.jpeg', plot = g, device = 'jpeg', dpi = 300)
-# 
-# 
-# 
-# 
-# g = ggplot() +  
-#   geom_stars(data = k, aes(fill = var1.pred, x = x, y = y), na.action = na.omit) +
-#   scale_fill_binned(type = 'viridis', breaks = seq(0.25, 0.95, 0.10), name = 'Prop. Water Column') +
-#   xlab(NULL) + ylab(NULL) +
-#   geom_sf(data = landUTM) + 
-#   coord_sf(xlim = xlim, ylim = ylim) +
-#   theme_bw() +
-#   theme(legend.position = 'right') 
-# 
-# g
-# 
-
-
-###############################################################################################################################
-###############################################################################################################################
-####################################################### Kernel Density of Benthic Dives ####################################################
-###############################################################################################################################
-###############################################################################################################################
-
-# library(splancs)
-# library(marmap)
-# library(ggplot2)
-# df = data[data$DiveType == 'Benthic', ]
-# df$t = as.numeric(format(df$date, "%j"))
-# 
-# dfpoints = df %>% mutate(x = st_coordinates(.)[,2], y = st_coordinates(.)[,1]) %>% st_drop_geometry()
-# 
-# dfpoints = as.points(dfpoints)
-# 
-# sealpts = coordinates(dfpoints)
-# 
-# boundingbox = bbox(sealpts)
-# 
-# xgr = seq(boundingbox[1,1], boundingbox[1,2], 10000) # values of x (lon) at which to compute the kernel
-# ygr = seq(boundingbox[2,1], boundingbox[2,2], 10000) # values of y (lat) at which to compute the kernel
-# zgr = seq(min(df$t) + 8, max(df$t) - 8, 15)
-# b3d = kernel3d(pts = sealpts, times = df$t, xgr = xgr, ygr = ygr, zgr = zgr, hxy = 50*1000, hz = 8)
-# 
-# 
-# # BATHY AND LAND
-# 
-# bathy = marmap::getNOAA.bathy(lon1 = min(data$lon) - 1, lon2 = max(data$lon) + 1, 
-#                               lat1 = min(data$lat) - 1, lat2 = max(data$lat) + 1, resolution = 1)
-# 
-# bf = fortify.bathy(bathy)
-# 
-# bf = bf %>% st_as_sf(coords = c('x', 'y')) %>% st_set_crs(4326) %>% st_transform(projUTM) %>%
-#   mutate(x = st_coordinates(.)[,1], y = st_coordinates(.)[,2]) %>% st_drop_geometry()
-# 
-# 
-# xlim = round(c(min(st_coordinates(df)[,1]), max(st_coordinates(df)[,1])), digits = 0)
-# ylim = round(c(min(st_coordinates(df)[,2]), max(st_coordinates(df)[,2])), digits = 0)
-# 
-# 
-# 
-# library(raster)
-# 
-# 
-# for (i in 1:length(zgr)) {
-#   
-#   m = list(x=xgr, y = ygr, z = b3d$v[,,i])
-#   
-#   r <- raster::raster(m, crs = CRS(projUTM))
-#   
-#   r1 = as(r, 'SpatRaster')
-#   
-#   r1 = terra::
-#   
-#   contours = amt::hr_isopleths(r1, levels = c(0.50, 0.95))
-#   
-#   g = ggplot()+
-#     
-#     # add 100m contour
-#    # geom_contour(data = bf, 
-#   #               aes(x=x, y=y, z=z),
-#   #               breaks=c(-100),
-#   #               size=c(0.3),
-#   #               colour="grey")+
-# 
-#     # # add 250m contour
-#     # geom_contour(data = bf, 
-#     #              aes(x=x, y=y, z=z),
-#     #              breaks=c(-250),
-#     #              size=c(0.6),
-#     #              colour="grey")+
-#     # 
-#     # # add coastline
-#     geom_sf(data = landUTM, 
-#                   fill = "darkgrey", color = NA) + 
-#    
-#     
-#     # add male polygon
-#     geom_sf(data = contours, mapping = aes(color = factor(level), fill = factor(level)), alpha = 0.25) +
-#     scale_fill_manual(values = c('violet', 'purple4')) +
-#     scale_color_manual(values = c('violet', 'purple4')) +
-#     
-#     # Add Boem wind areas
-#     #geom_sf(data = wea, color = 'red', fill = "red", linewidth = 0.5, alpha = 0.5)+
-#     
-#     # configure projection and plot domain
-#     coord_sf(xlim = xlim, ylim = ylim)+
-#     
-#     # formatting
-#     ylab("")+xlab("")+
-#     theme_bw() +
-#     theme(legend.position = 'None')
-#   g 
-#   }

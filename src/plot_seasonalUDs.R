@@ -14,8 +14,8 @@ setwd("~/seal_telemetry/")
 ###################################### LOAD DATA ############################################################################################################################################################################
 ##############################################################################################################################################################################################################################
 # read ud polygons
-FUD = st_read('./data/L3/UD/Hg_PreConstruction_FemaleCollectiveUDs_AllSeasonPolygons.shp')
-MUD = st_read('./data/L3/UD/Hg_PreConstruction_MaleCollectiveUDs_AllSeasonPolygons.shp')
+FUD = st_read('./data/L3/UD/collectiveUD_polygons/Hg_PreConstruction_FemaleCollectiveUDs_AllSeasonPolygons.shp')
+MUD = st_read('./data/L3/UD/collectiveUD_polygons/Hg_PreConstruction_MaleCollectiveUDs_AllSeasonPolygons.shp')
 
 
 # Load the land spatial polygons dataframe and subset based on relevant landmasses
@@ -24,7 +24,7 @@ land = land[land$admin %in% c("Canada", 'United States of America'),]
 land = land[which(land$postal %in% c("ME", "NH", "VT", "RI", "CT", "MA", "PA", "NY", "DE", "NJ", "VA", "MD", "NC", 'OH', 'WV', 'SC', 'KY', 'TN', 'IL', 'WI', 'MN', 'IA', 'IN', 'MI') | land$region == "Eastern Canada"),]
 
 ## minor islands (islands less than 2 square km)
-minor_islands = st_read("./READ-PSB-MoveSeals/ne_10m_minor_islands/ne_10m_minor_islands.shp") %>%
+minor_islands = st_read("./data/shapefiles/ne_10m_minor_islands/ne_10m_minor_islands.shp") %>%
   mutate(name = featurecla) %>%
   dplyr::select(name, geometry)
 
@@ -45,11 +45,9 @@ bathy = marmap::getNOAA.bathy(lon1 = xlim[1], lon2 = xlim[2],
 bf = fortify.bathy(bathy)
 
 # WIND ENERGY AREAS
-we = st_read("./data/shapefiles/BOEM_Wind_Leases_8_30_2023.shp")
-we = st_intersection(we, bounding_box)
-plot(we['STATE'])
-
-we = st_union(we)
+we = st_read("./data/shapefiles/Wind_Lease_Boundaries__BOEM__2025-01-01/Offshore_Wind_Lease_Outlines_Northeast_Dissolve.shp") %>%
+  st_transform(4326) 
+plot(we)
 
 ################################ PLOTTING ##############################################################
 ########################################################################################################
@@ -139,7 +137,7 @@ AUDplot <- ggplot() +
                aes(x=x, y=y, z=z),
                breaks=c(-200),
                linewidth=c(0.3),
-               colour="gray10", lty = 1)+
+               colour="gray50", lty = 1)+
   
   geom_text_contour(data = bf, 
                     nudge_y = -0.20,

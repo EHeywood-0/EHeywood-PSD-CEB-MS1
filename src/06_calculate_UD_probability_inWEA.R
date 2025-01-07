@@ -17,17 +17,19 @@ raster01 = function(r){
 
 seasons = c('Winter', "Spring", 'Summer', 'Fall')
 
-prj = crs(x = raster::stack(x = paste0('./data/L3/UD/Hg_PreConstruction_FemaleUDs_', seasons[season],'.grd')))
+prj = crs(x = raster::stack(x = paste0('./data/L3/UD/UD_rasters/Hg_PreConstruction_FemaleUDs_', seasons[1],'.grd')))
 
-wea = st_read("./data/shapefiles/BOEM_Wind_Leases_8_30_2023.shp") %>%
+# read in wind energy lease areas - subsetted, unioned, and dissolved for those in the northeast
+wea = st_read("./data/shapefiles/Wind_Lease_Boundaries__BOEM__2025-01-01/Offshore_Wind_Lease_Outlines_Northeast_Dissolve.shp") %>%
   st_transform(prj)
+
 
 collectL = list()
 # GET AREAS FOR FEMALES
 for (season in 1:length(seasons)){
   
-  FStackR = raster::stack(x = paste0('./data/L3/UD/Hg_PreConstruction_FemaleUDs_', seasons[season],'.grd'))
-  MStackR = raster::stack(x = paste0('./data/L3/UD/Hg_PreConstruction_MaleUDs_', seasons[season],'.grd'))
+  FStackR = raster::stack(x = paste0('./data/L3/UD/UD_rasters/Hg_PreConstruction_FemaleUDs_', seasons[season],'.grd'))
+  MStackR = raster::stack(x = paste0('./data/L3/UD/UD_rasters/Hg_PreConstruction_MaleUDs_', seasons[season],'.grd'))
   
   # # Transform probabilites so they sum to one 
   # FStackR_T = raster::stack(lapply(X = 1:nlayers(FStackR), FUN = function(x){

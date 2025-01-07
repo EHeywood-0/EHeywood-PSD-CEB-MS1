@@ -56,7 +56,7 @@ g = ggplot() +
   xlab('Probability Benthic / Demersal') +
   ylab('# Dives')
 g
-ggsave(filename = './plots/manuscript/Supplemental Figures/FigureS4.png', 
+ggsave(filename = './plots/manuscript/FigureS4.png', 
        plot = g, device = "png", dpi = 300, units = 'mm',scale = 0.8, width = 170, height = 140)
 
 
@@ -66,7 +66,7 @@ ggsave(filename = './plots/manuscript/Supplemental Figures/FigureS4.png',
 ###############################################################################################################
 ##################################### SUPPLEMENTAL FIGURE 5 ###################################################
 ###############################################################################################################
-
+dives$month = format(dives$date, '%b')
 # Summerize dive data by sex, ptt, and month
 smonth = dives %>% group_by(month, sex, ptt) %>%
   summarise(`Mean Max Depth (m)` = round(mean(Depth, na.rm=T), 2),
@@ -144,7 +144,7 @@ comb = (gg1 + theme(axis.title.x = element_blank(), axis.text.x = element_blank(
   plot_annotation(tag_levels = 'a')
 
 comb 
-ggsave(filename = "./plots/manuscript/Supplemental Figures/FigureS5.png", plot = comb, 
+ggsave(filename = "./plots/manuscript/FigureS5.png", plot = comb, 
        device = 'png', dpi = 300, width = 170, height = 170, units = 'mm',scale = 1.2)
 
 ###############################################################################################################
@@ -155,7 +155,6 @@ ggsave(filename = "./plots/manuscript/Supplemental Figures/FigureS5.png", plot =
 ########################################## SUPPLEMENTAL FIGURE 6 ##########################################################
 ##################################################################################################################
 # DIVE TYPES BY SEX & SEASON
-dives$month = format(dives$date, '%b')
 dives$month = factor(dives$month, 
                      levels = c("Jan", 'Feb', "Mar", 
                                 "Apr", "May", "Jun", 
@@ -215,9 +214,9 @@ p4 = ggplot(data = restable2, mapping = aes(x = DiveType, y = DTProp, color = se
 
 p4
 
-ggsave(filename = './plots/manuscript/Supplemental Figures/FigureS6.png', 
+ggsave(filename = './plots/manuscript/FigureS6.png', 
        plot = p4, device = 'png', dpi = 300, width = 170, height = 85, units = 'mm',scale = 1.5)
-ggsave(filename = './plots/manuscript/Supplemental Figures/FigureS6.pdf', 
+ggsave(filename = './plots/manuscript/FigureS6.pdf', 
        plot = p4, device = 'pdf', width = 1000, height = 650, units = 'px',scale = 3)
 
 
@@ -366,7 +365,7 @@ comb = (gg1)  /
   (gg3) + plot_annotation(tag_level = 'a')
 comb
 
-ggsave(filename = "./plots/manuscript/Main Manuscript Figures/Figure4.png", plot = comb, 
+ggsave(filename = "./plots/manuscript/Figure4.png", plot = comb, 
        device = 'png', dpi = 320,
        width = 170, 
        height = 170,

@@ -10,6 +10,7 @@ library(dplyr)
 library(readr)
 library(tidyr)
 library(ggplot2)
+library(patchwork)
 setwd('~/seal_telemetry/')
 
 # Load all imputed dive data with distance to shore and bathymetry
@@ -86,29 +87,35 @@ p = ggplot(data = restable,
            mapping = aes(x = week, 
                          y = Proportion, 
                          fill = DiveType, 
-                         color = DiveType)) +
-  stat_boxplot(outliers = FALSE, alpha = 0.75, linewidth = 0.55, coef = 1) +
+                         color = DiveType, 
+                         group = DiveType
+                         )
+           ) +
+  geom_smooth(alpha = 0.50, method = 'gam', ) +
+  #geom_point(alpha = 0.2) + 
+  #stat_boxplot(outliers = FALSE, alpha = 0.75, linewidth = 0.55, coef = 1) +
   scale_fill_manual(values = c("#d2dfe6", '#71644a', "gray90"), labels = levels(dives$DiveType)) +
   scale_color_manual(values = c("#4a6e76", '#71644a', "gray80"), labels = levels(dives$DiveType)) +
   scale_x_discrete(breaks = datelabs$week, 
                    labels= datelabs$lab) +
+  scale_y_continuous(limit = c(0,1), oob = scales::squish) +
   
 
   
   ylab('Proportion') +
   theme_bw() +
   theme(legend.title = element_blank(), 
-        legend.position = c(0.89,0.89),
+        legend.position = c(0.2,0.80),
         legend.background = element_blank(),
         axis.title.x = element_blank(),
         axis.ticks.x = element_blank()) +
   annotate("segment", 
            x = seq(0,30,1), xend = seq(0,30,1), #adjust the length of ticks as you need
-           y = -0.05, yend = -0.025) +
+           y = 0, yend = -0.2) +
   annotate("segment",
            x = seq(1,31,4), xend = seq(1,31,4), #adjust the length of ticks as you need
-           y = -0.078, yend = -0.025, linewidth = 1) +
-  ggh4x::coord_axes_inside(ylim = c(0,1), clip = 'off') 
+           y = 0, yend = -0.2, linewidth = 1) +
+  ggh4x::coord_axes_inside(ylim = c(0,1), clip = 'off')
 
 p
 
@@ -140,6 +147,8 @@ dives1 = dives[which(dives$week %in% unique(restable$week)),]
 db = ggplot(data = dives1, aes(x=as.factor(week))) + 
   geom_boxplot(aes(y=distanttoshore/1000), color = 'grey40', fill = 'grey70',outliers = F, coef=1) +
   geom_boxplot(aes(y = meanbathy_m / trans), color = 'grey10', fill = 'grey30', outliers = F, coef=1) +  # Invert bathy values here
+  #geom_smooth(aes(y=distanttoshore/1000, x = week), method = 'gam',color = 'grey40', fill = 'grey70') +
+  #geom_smooth(aes(y = meanbathy_m / trans, x = week), method = 'gam',color = 'grey10', fill = 'grey30') +
   scale_y_continuous(
     name = 'Dist. offshore(km)',
     sec.axis = sec_axis(~ .*trans, name = 'Bathymetry(m)')  # Invert back for the label
@@ -169,15 +178,14 @@ p = p + theme(axis.title.x = element_blank(),
               text = element_text(size = 11),
               axis.text = element_text(size = 11),
               plot.margin = margin(0,0,0,0), 
-              legend.position.inside = c(1,1))
+              #legend.position.inside = c(1,1)
+              )
 db = db + theme(text = element_text(size = 11),
                 axis.text = element_text(size = 11),
                 plot.margin = margin(0,0,0,0))
 p3 = p3 + theme(text = element_text(size = 11), 
                 axis.text = element_text(size = 11),
                 plot.margin = margin(0,0,0,0))
-
-
 
 g = (p3) / 
   (p) /
@@ -187,7 +195,11 @@ g
 ggsave(filename = './plots/manuscript/Figure3.pdf', 
        plot = g, 
        device = 'pdf',width = 1200, height = 1200,units = 'px', scale = 2)
-
+ggsave(filename = './plots/manuscript/Figure3.png', 
+       plot = g, 
+       device = 'png',
+       dpi = 300, 
+       width = 170, height = 170, units = 'mm', scale = 1.25)
 
 ################################################################################################################
 ##################################### SCRATCH ##################################################################

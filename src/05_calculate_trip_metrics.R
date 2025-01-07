@@ -17,7 +17,7 @@ library(sf)
 ###################################################################################################################
 
 # READ IN SSM REGULARIZED COMPLETE TRIPS, REROUTED AROUND LAND
-data = read_csv("./data/L2/SSM/Hg-2019-2023-SSM-Tracks-CompleteTrips-Reroute.csv")
+data = read_csv("./data/L2/SSM/locs/Hg-2019-2023-SSM-Tracks-CompleteTrips-Reroute.csv")
 data$ptt = sapply(strsplit(data$id, '-'), '[[', 1)
 data$TripID = paste(data$ptt, sapply(strsplit(data$id, '-'), '[[', 2), sep = '-')
 data$SegID = data$id
@@ -157,15 +157,12 @@ data_sf$TripLength_km = as.numeric(st_length(data_sf) / 1000)
 ################################# Calculate TRIP LENGTHS AND PERCENTAGES OF TRIPS OCCURRING INSIDE WEAS ################################
 ########################################################################################################################################
 
-# READ IN BOEM LEASE ARES
-s = st_read(dsn = "./data/shapefiles/BOEM_Wind_Leases_8_30_2023.shp")
+# READ IN BOEM LEASE ARES (updated and downloaded 2024-01-01) - in ArcGis Pro I subset for Northeast US, fixed polygon holes, unioned and dissolved
+WEA_NE = st_read(dsn = "./data/shapefiles/Wind_Lease_Boundaries__BOEM__2025-01-01/Offshore_Wind_Lease_Outlines.shp") %>% 
+  st_transform(4326)
 
-# DEFINE A BOUNDING BOX
-dfbbox = st_bbox(data_sf)
-# INTERSECT TO GET WEAs OCCURRING ONLY WITHIN THE SPATIAL BOUNDS OF THE SEALS
-WEA_NE = st_intersection(s, y = st_as_sfc(dfbbox))
-plot(WEA_NE['COMPANY'])
-WEA_union = st_union(WEA_NE)
+WEA_NE = st_make_valid(WEA_NE)
+
 # Take trip lines data_sf and intersect with the wind energy areas
 data_int = st_intersection(x = data_sf, y = WEA_NE) 
 
@@ -175,23 +172,24 @@ data_int$len_in_WEA = as.numeric(st_length(data_int) / 1000)
 ########################################################################################################################################
 ###################################### CALCULATE TIME IN WEA AND PERCENT TIME IN WEA ###################################################
 ########################################################################################################################################
-data_pts = st_as_sf(spatialtripdata, coords = c("lon", 'lat')) %>% st_set_crs(4326)
-
-# Take trip lines data_sf and intersect with the wind energy areas
-timeinwea = st_intersection(x = data_pts, y = WEA_union) 
-timeinwea = timeinwea %>% mutate(inwea = TRUE) %>% dplyr::select(SegID, date, inwea) %>% st_drop_geometry()
-
-
-data_pts = left_join(data_pts, timeinwea, by = join_by(SegID, date)) %>% st_drop_geometry()
-data_pts$inwea[is.na(data_pts$inwea)] = FALSE
-data_pts$inweaID = paste(data_pts$SegID, cumsum(ifelse(data_pts$inwea, 0, 1)), sep = '-')
-data_pts$inweaID[!data_pts$inwea] = NA
-data_pts = data_pts %>% group_by(TripID, inweaID) %>% summarise(TimeinWeaSecs = as.numeric(difftime(max(date), min(date), units = 'secs')))
-data_pts$TimeinWeaSecs[is.na(data_pts$inweaID)] = NA
-
-
-# Total Time by Trip
-timeinwea = data_pts %>% group_by(TripID) %>% summarise(TimeinWeaDay = sum(TimeinWeaSecs, na.rm = T)/60/60/24)
+# data_pts = st_as_sf(spatialtripdata, coords = c("lon", 'lat')) %>% st_set_crs(4326)
+# 
+# # Take trip lines data_sf and intersect with the wind energy areas
+# WEA_union = st_union(WEA_NE)
+# timeinwea = st_intersection(x = data_pts, y = WEA_union) 
+# timeinwea = timeinwea %>% mutate(inwea = TRUE) %>% dplyr::select(SegID, date, inwea) %>% st_drop_geometry()
+# 
+# 
+# data_pts = left_join(data_pts, timeinwea, by = join_by(SegID, date)) %>% st_drop_geometry()
+# data_pts$inwea[is.na(data_pts$inwea)] = FALSE
+# data_pts$inweaID = paste(data_pts$SegID, cumsum(ifelse(data_pts$inwea, 0, 1)), sep = '-')
+# data_pts$inweaID[!data_pts$inwea] = NA
+# data_pts = data_pts %>% group_by(TripID, inweaID) %>% summarise(TimeinWeaSecs = as.numeric(difftime(max(date), min(date), units = 'secs')))
+# data_pts$TimeinWeaSecs[is.na(data_pts$inweaID)] = NA
+# 
+# 
+# # Total Time by Trip
+# timeinwea = data_pts %>% group_by(TripID) %>% summarise(TimeinWeaDay = sum(TimeinWeaSecs, na.rm = T)/60/60/24)
 ########################################################################################################################################
 ###################################### AGGREGATE AND SUMMARIZE ###################################################
 ########################################################################################################################################
@@ -202,11 +200,11 @@ data_int_s = data_int %>%  group_by(TripID) %>% # Here you need to insert all th
   st_drop_geometry()
 
 # Merge with timeinwea data
-weadat = left_join(timeinwea, data_int_s, by = 'TripID')
+#weadat = left_join(timeinwea, data_int_s, by = 'TripID')
 
 # merge back with other tripdata and get the percentage in WEA
 
-aggtripdata = left_join(data_sf, weadat, 'TripID')
+aggtripdata = left_join(data_sf, data_int_s, 'TripID')
 
 aggtripdata$`Percent in WEA` = aggtripdata$TripLen_in_WEA_km / aggtripdata$TripLength_km * 100
 
@@ -219,15 +217,17 @@ spatialtripdata_ = left_join(spatialtripdata, aggtripdata, by = 'TripID') %>%
          MaxDisttoShore = max(distanttoshore)/1000, 
          MinDisttoShore = min(distanttoshore)/1000,
          SDDisttoShore = sd(distanttoshore)/1000,
-         PercTimeinWea = TimeinWeaDay / (as.numeric(difftime(TripEnd, TripStart, units = 'days'))) * 100) %>% ungroup() %>%
+         #PercTimeinWea = TimeinWeaDay / (as.numeric(difftime(TripEnd, TripStart, units = 'days'))) * 100
+         ) %>% 
+  ungroup() %>%
   dplyr::select(ptt, TripID, TripStart, TripEnd, 
                 TripLength_km, MeanDisttoShore, MaxDisttoShore, MinDisttoShore, SDDisttoShore,
-                InWEA,TripLen_in_WEA_km, `Percent in WEA`, TimeinWeaDay, PercTimeinWea, 
+                InWEA,TripLen_in_WEA_km, `Percent in WEA`,
                 sex, masskg, lengthcm, girthcm) %>% distinct() %>%
   arrange(TripID)
 
-spatialtripdata_$TimeinWeaDay[!spatialtripdata_$InWEA] = NA
-spatialtripdata_$PercTimeinWea[!spatialtripdata_$InWEA] = NA
+#spatialtripdata_$TimeinWeaDay[!spatialtripdata_$InWEA] = NA
+#spatialtripdata_$PercTimeinWea[!spatialtripdata_$InWEA] = NA
 
 write_csv(x = spatialtripdata_, file = './data/L3/Hg-PreConstruction-SpatialTripMetrics_CompleteModelableTrips.csv')
 
@@ -255,8 +255,8 @@ pttsummtripmetrix = fullsummary %>%
             `No. Trips in WEA`= sum(InWEA),
             `Mean Trip Length in WEA (km)` = round(mean(TripLen_in_WEA_km, na.rm = T)),
             `SD Trip Length in WEA (km)` = round(sd(TripLen_in_WEA_km, na.rm=T)),
-            `Mean Percent Time in WEA (km)` = round(mean(PercTimeinWea, na.rm=T)),
-            `SD Percent Time in WEA (km)` = round(sd(PercTimeinWea, na.rm=T)),
+            #`Mean Percent Time in WEA (km)` = round(mean(PercTimeinWea, na.rm=T)),
+            #`SD Percent Time in WEA (km)` = round(sd(PercTimeinWea, na.rm=T)),
             `Mean Max Distance to Shore (km)` = round(mean(MaxDisttoShore, na.rm=T)),
             `SD Max Distance to Shore (km)` = round(sd(MaxDisttoShore, na.rm=T)),
             `Mean Distance to Shore (km)`= round(mean(MeanDisttoShore, na.rm=T)),

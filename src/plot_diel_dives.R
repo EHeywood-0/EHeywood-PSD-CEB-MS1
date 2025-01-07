@@ -165,10 +165,11 @@ g2 = ggplot(subset(res_wrapped, Season == "Winter"), mapping = aes(x = hour, y =
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
   geom_point(alpha = 0.5) +
   geom_smooth(alpha = 0.50, method = 'loess', span = 0.2) +
-  scale_fill_manual(values = c("gray90", "#aec8d6", '#8e7e5e')) +
-  scale_color_manual(values = c('gray90', "#aec8d6", '#8e7e5e')) +
+  scale_fill_manual(values = c("gray90", "#d2dfe6", '#71644a')) +
+  scale_color_manual(values = c('gray90', "#d2dfe6", '#71644a')) +
   ylab(NULL) +
   xlab(NULL) +
+  ggtitle(label = 'winter') +
   theme_bw() +
   theme(legend.position = 'none') +
   coord_cartesian(xlim = c(0,24), expand = F)
@@ -193,10 +194,11 @@ g3 = ggplot(data = subset(res_wrapped, Season == "Spring"), mapping = aes(x = ho
   scale_y_continuous(limits = c(0,1), expand = c(0, 0)) +
   geom_smooth(alpha = 0.50, method = 'loess', span = 0.2) +
   #geom_boxplot() +
-  scale_fill_manual(values = c("gray90", "#aec8d6", '#8e7e5e')) +
-  scale_color_manual(values = c('gray90', "#aec8d6", '#8e7e5e')) +
+  scale_fill_manual(values = c("gray90", "#d2dfe6", '#71644a')) +
+  scale_color_manual(values = c('gray90', "#d2dfe6", '#71644a')) +
   ylab(NULL) +
   xlab(NULL) +
+  ggtitle(label = 'spring') +
   theme_bw() +
   theme(legend.position = 'none') +
   coord_cartesian(xlim = c(0, 24), expand = FALSE)
@@ -243,15 +245,18 @@ g4 = ggplot(subset(res_wrapped, Season == "Summer"), mapping = aes(x = hour, y =
   geom_rect(aes(xmin = Sunset, xmax = Dusk, ymin = -Inf, ymax = Inf), fill = '#3e5b96', color = '#3e5b96') +
   geom_vline(mapping = aes(xintercept = Sunrise), color = 'orange', linewidth = 1.5) +
   geom_vline(mapping = aes(xintercept = Sunset), color = 'orange', linewidth = 1.5) +
-  scale_x_continuous(breaks = seq(0,24,2), labels = seq(0,24,2)) +
+  scale_x_continuous(
+    breaks = seq(0, 24, by = 2),
+    labels = labs) +
   scale_y_continuous(limits = c(0,1), expand = c(0, 0)) +
   geom_point(alpha = 0.5) +
   geom_smooth(mapping = aes(x = hour, y = PropDiveType, group = DiveType, color = DiveType, fill = DiveType),
               alpha = 0.50, method = 'loess', span = 0.3) +
-  scale_fill_manual(values = c("gray90", "#aec8d6", '#8e7e5e')) +
-  scale_color_manual(values = c('gray90', "#aec8d6", '#8e7e5e')) +
+  scale_fill_manual(values = c("gray90", "#d2dfe6", '#71644a')) +
+  scale_color_manual(values = c('gray90', "#d2dfe6", '#71644a')) +
   ylab('Proportion') +
   xlab("Hour (EST)") +
+  ggtitle(label = 'summer') +
   theme_bw() +
   theme(legend.position = 'none') +
   coord_cartesian(xlim = c(0,24), expand = F)
@@ -264,13 +269,15 @@ dives$DiveType = factor(dives$DiveType, levels = c('Shallow Water (<20m)', 'Pela
 dives = dives[dives$Season != 'Fall', ]
 g = ggplot(dives, mapping = aes(x = daytime, group = DiveType, fill = DiveType, color = DiveType)) +
   geom_histogram(stat = 'count', position = position_dodge(), alpha = 0.50) +
-  scale_fill_manual(values = c("gray90", "#aec8d6", '#8e7e5e')) +
-  scale_color_manual(values = c("gray90", "#aec8d6", '#8e7e5e')) +
+  scale_fill_manual(values = c("gray90", "#d2dfe6", '#71644a')) +
+  scale_color_manual(values = c("gray80", "#4a6e76", '#71644a')) +
   theme_bw() +
   xlab(NULL) +
   ylab('# Dives') +
   theme(legend.position = 'none') +
-  facet_wrap(~Season)
+  facet_wrap(~Season) +
+  scale_y_continuous(limits = c(0,30000), expand = c(0,0)) +
+  coord_cartesian(expand = F)
 g
 
 # Combine the plots into a 2x2 grid
@@ -292,3 +299,5 @@ ggsave(filename = './plots/manuscript/Figure5_dieldive_withpts.png',
        width = 170, height = 170, units = 'mm', scale = 1.5)
 
 sampesizesummary = dives %>% st_drop_geometry() %>% group_by(Season, sex) %>% summarise(Nptt = length(unique(ptt)), Ndives = n())
+t = flextable::flextable(sampesizesummary)
+flextable::save_as_docx(t, path = './plots/manuscript/AnimalBiotelemetrySubmission/TableDiveSampleSizeSummary.docx')

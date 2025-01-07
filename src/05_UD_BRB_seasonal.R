@@ -27,7 +27,7 @@ land = land[which(land$postal %in% c("ME", "NH", "VT", "RI", "CT", "MA", "PA", "
 plot(land['featurecla'])
 
 # Now minor islands (islands less than 2 square km)
-minor_islands = st_read("./READ-PSB-MoveSeals/ne_10m_minor_islands/ne_10m_minor_islands.shp") %>%
+minor_islands = st_read("./data/shapefiles/ne_10m_minor_islands/ne_10m_minor_islands.shp") %>%
   mutate(name = featurecla) %>%
   dplyr::select(name, geometry)
 
@@ -44,14 +44,10 @@ rm(minor_islands, land)
 # Methods in SDLfilter 
 
 
-df = read_csv("./data/L2/SSM/Hg-2019-2023-SMM-Tracks-CompleteTrips-Reroute.csv") %>% 
+df = read_csv("./data/L2/SSM/Hg-2019-2023-SSM-Tracks-CompleteTrips-Reroute.csv") %>% 
   arrange(ptt, date) %>%
   dplyr::select(ptt, TripID, id, date, lon, lat, x, y, x.se, y.se)
 
-# tripdur = read_csv("./data/L2/SSM/Hg-2019-2023-SMM-Tracks-CompleteTrips-Reroute.csv") %>% 
-#   arrange(ptt, date) %>% 
-#   group_by(TripID) %>% summarise(TripDurDays = difftime(max(date), min(date), units = 'days'))
-# median(tripdur$TripDurDays) # 7 days 
 
 hist(df$x.se, breaks = 500, xlim = c(0,30))
 hist(df$y.se, breaks = 200, xlim = c(0,30))
@@ -212,8 +208,8 @@ for (i in 1:length(sid)){
   
   curseason = sid[i]
   
-  FStackR = raster::stack(x = paste('./data/L3/UD/Hg_PreConstruction_FemaleUDs_', curseason, '.grd', sep = ''))
-  MStackR = raster::stack(x = paste('./data/L3/UD/Hg_PreConstruction_MaleUDs_', curseason, '.grd', sep = ''))
+  FStackR = raster::stack(x = paste('./data/L3/UD/UD_rasters/Hg_PreConstruction_FemaleUDs_', curseason, '.grd', sep = ''))
+  MStackR = raster::stack(x = paste('./data/L3/UD/UD_rasters/Hg_PreConstruction_MaleUDs_', curseason, '.grd', sep = ''))
   
   Fptts = gsub(pattern = 'X', replacement = '', x = sapply(strsplit(names(FStackR), '\\.'), '[[', 1))
   Mptts = gsub(pattern = 'X', replacement = '', x = sapply(strsplit(names(MStackR), '\\.'), '[[', 1))
@@ -258,6 +254,6 @@ for (i in 1:length(sid)){
 FUD = dplyr::bind_rows(Fpoly) %>% sf::st_transform(4326)
 MUD = dplyr::bind_rows(Mpoly) %>% sf::st_transform(4326)
 
-st_write(obj = FUD, dsn = './data/L3/UD/Hg_PreConstruction_FemaleCollectiveUDs_AllSeasonPolygons.shp', append = F)
+st_write(obj = FUD, dsn = './data/L3/UD/colleHg_PreConstruction_FemaleCollectiveUDs_AllSeasonPolygons.shp', append = F)
 
 st_write(obj = MUD, dsn = './data/L3/UD/Hg_PreConstruction_MaleCollectiveUDs_AllSeasonPolygons.shp', append = F)

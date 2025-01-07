@@ -1,6 +1,6 @@
 # CATEGORIZING DIVES AS BENTHIC OR PELAGIC
 # EIH
-# 2024-06-11
+# 2025-01-03
 
 # Purpose: Read in data from the dive position imputation and rejection sampling
 # Calculate the proportion of water column use
@@ -35,18 +35,20 @@ library(ggplot2)
 ################################################################################################
 ################################################# LOAD DATA ####################################
 ################################################################################################
-fnames = list.files(path = './data/L3/dive/imputeddivepos', 
-                    pattern = '*.csv$', all.files = TRUE, 
-                    recursive = TRUE, full.names = TRUE)
+# fnames = list.files(path = './data/L3/dive/imputeddivepos', 
+#                     pattern = '*.csv$', all.files = TRUE, 
+#                     recursive = TRUE, full.names = TRUE)
+# 
+# data = purrr::map_dfr(.x = fnames, .f = function(.x){
+#   
+#   tmp = read_csv(.x) %>% group_by(diveID) %>% 
+#     mutate(Nimputes = n()) %>%
+#     rename(bathy_m = bathydepth)
+#   return(tmp)
+#   
+# })
 
-data = purrr::map_dfr(.x = fnames, .f = function(.x){
-  
-  tmp = read_csv(.x) %>% group_by(diveID) %>% 
-    mutate(Nimputes = n()) %>%
-    rename(bathy_m = bathydepth)
-  return(tmp)
-  
-})
+data = read_csv("./data/L3/dive/Hg_2019-2023_DivePosEstimates_Imputations_BestEst.csv")
 
 data = data %>%  
   mutate(totaldivespossible = n_dives_lost + n_dives_imputed) %>%
@@ -54,7 +56,7 @@ data = data %>%
 
 mean(data$percloss) # 4% average loss
 
-# Subset to get those dive positions which have more than 90 imputations
+# Subset to get those dive positions which have more than 50 imputations
 data_ = data[data$Nimputes > 50, ]
 totallost = data_ %>% group_by(id) %>% 
   summarise(AbsPercLoss = (totaldivespossible[1] - length(unique(diveID))) / totaldivespossible[1],
@@ -87,18 +89,26 @@ dives = data_ %>% mutate(PercWaterCol = Depth / bathy_m) %>%
   ungroup() %>%
   mutate(LowerCI = meanPWC - 1.96*sePWC, 
          UpperCI = meanPWC + 1.96*sePWC)
-dives = dives[which(dives$meanPWC < 1.1), ]
+dives = dives[which(dives$PW50 < 1.1), ]
 # USE PROBABILITY BENTHIC
-hist(dives$meanPWC, breaks = 50, xlim = c(0,1.1))
-hist(dives$PW25, breaks = 50)
-hist(dives$PW75, breaks = 50)
+hist(dives$PW50, breaks = 100, xlim = c(0,1.2))
+hist(dives$PW25, breaks = 100, xlim = c(0,1.2))
+hist(dives$PW75, breaks = 100, xlim = c(0,1.2))
 
-hist(dives$PW50, breaks = 50)
-abline(v = 0.9, col = 'red')
+hist(dives$PW50, breaks = 100, xlim = c(0,1.2))
+abline(v = 0.875, col = 'red')
+
 # BIMODAL - fit mixture model to determine the two underlying distributions
 
 library(mixR)
 x = dives$PW50
+
+# xbeta = x
+# xbeta[xbeta >1] = 1
+# dives$x = dives$PW50
+# dives$x[dives$x>1]=1
+# oneset = dives[dives$ptt == dives$ptt[1],]
+# betamm = betareg::betamix(formula = x ~ 1 | 1, data = oneset, k = 2)
 
 # fit diff dist families
 lnmm <- mixR::mixfit(x = x, ncomp = 2, family = 'lnorm')
@@ -106,36 +116,73 @@ wmm <- mixR::mixfit(x = x, ncomp = 2, family = 'weibull')
 gmm <- mixR::mixfit(x = x, ncomp = 2, family = 'gamma')
 nmm <- mixR::mixfit(x = x, ncomp = 2, family = 'normal')
 
-
 # plot
 p1 <- plot(nmm, title = 'Gaussian Mixture k=2', 
-           xlab = 'Max Dive Depth % of Water Column', 
            legend.position = 'none', trans = 0.4) + 
-  scale_fill_manual(values = c("cornflowerblue",'darkblue')) 
+  scale_fill_manual(values = c("cornflowerblue",'darkblue')) +
+  annotate(geom = 'text', x = 0.2, y = 4,label = paste0('BIC = ', round(nmm$bic), 0)) +
+  xlab('') +
+  coord_cartesian(xlim = c(0,1.2), ylim = c(0,5))
 p2 <- plot(lnmm, title = 'Lognormal Mixture k=2', 
-           legend.position = 'none', 
-           xlab = 'Max Dive Depth % of Water Column', trans = 0.4)+ 
-  scale_fill_manual(values = c("cornflowerblue",'darkblue'))
+           legend.position = 'none', trans = 0.4)+ 
+  scale_fill_manual(values = c("cornflowerblue",'darkblue'))+
+  annotate(geom = 'text', x = 0.2, y = 4,label = paste0('BIC = ', round(lnmm$bic), 0)) +
+  xlab('') +
+  coord_cartesian(xlim = c(0,1.2), ylim = c(0,5))
+
 p3 <- plot(wmm, title = 'Weibull Mixture k=2', 
            legend.position = 'none', 
-           xlab = 'Max Dive Depth % of Water Column', trans = 0.4)+ 
-  scale_fill_manual(values = c("cornflowerblue",'darkblue'))
+           xlab = '% Water column reached at max dive depth', trans = 0.4)+ 
+  scale_fill_manual(values = c("cornflowerblue",'darkblue'))+
+  annotate(geom = 'text', x = 0.2, y = 4,label = paste0('BIC = ', round(wmm$bic), 0)) +
+  coord_cartesian(xlim = c(0,1.2), ylim = c(0,5))
 
 p4 <- plot(gmm, title = 'Gamma Mixture k=2', 
            legend.position = 'none', 
-           xlab = 'Max Dive Depth % of Water Column', trans = 0.4)+ 
-  scale_fill_manual(values = c("cornflowerblue",'darkblue'))
+           xlab = '% Water column reached at max dive depth', trans = 0.4)+ 
+  scale_fill_manual(values = c("cornflowerblue",'darkblue'))+
+  annotate(geom = 'text', x = 0.2, y = 4,label = paste0('BIC = ', round(gmm$bic), 0)) +
+  coord_cartesian(xlim = c(0,1.2), ylim = c(0,5))
 
-gridExtra::grid.arrange(p1, p2, p3, p4, nrow = 2) 
+comb = gridExtra::grid.arrange(p1, p2, p3, p4, nrow = 2) 
 
-s_normal = select(x, ncomp = 2:4)
-s_weibull = select(x, ncomp = 2:4, family = 'weibull')
-wmm3 = mixfit(x, ncomp = 3, family = 'weibull')
-plot(wmm3, title = 'Gaussian Mixture k=2', 
-     xlab = 'Perc. Water Column', 
-     legend.position = 'none', trans = 0.25) + 
-  scale_fill_manual(values = c("cornflowerblue",'darkblue', 'green'))
+ggsave(filename = './plots/manuscript/AnimalBiotelemetrySubmission/SupplementalMixtureModeling.png', 
+       plot = comb, 
+       device = 'png', dpi = 320, width = 170, height = 150, units = 'mm', scale = 1.25)
 
+ggsave(filename = './plots/manuscript/AnimalBiotelemetrySubmission/SupplementalMixtureModeling.pdf', 
+       plot = comb, 
+       device = 'pdf', width = 1000, height = 900, units = 'px', scale = 3)
+
+# # PLOT K= 3
+# wmm3 <- mixR::mixfit(x = x, ncomp = 4, family = 'weibull')
+# gmm3 <- mixR::mixfit(x = x, ncomp = 3, family = 'gamma')
+# plot(wmm3)
+# 
+# p43 <- plot(gmm3, title = 'Gamma Mixture k=3', 
+#            legend.position = 'none', 
+#            xlab = '% Water column reached at max dive depth', trans = 0.4)+ 
+#   scale_fill_manual(values = c("cornflowerblue",'red','darkblue'))+
+#   annotate(geom = 'text', x = 0.2, y = 4,label = paste0('BIC = ', round(gmm3$bic), 0)) +
+#   coord_cartesian(xlim = c(0,1.2), ylim = c(0,5))
+# p43
+# p33 <- plot(wmm3, title = 'Weibull Mixture k=3', 
+#             legend.position = 'none', 
+#             xlab = '% Water column reached at max dive depth', trans = 0.4)+ 
+#   scale_fill_manual(values = c("cornflowerblue",'red','darkblue'))+
+#   annotate(geom = 'text', x = 0.2, y = 4,label = paste0('BIC = ', round(wmm3$bic), 0)) +
+#   coord_cartesian(xlim = c(0,1.2), ylim = c(0,5))
+# p33
+# # plot
+# 
+# gridExtra::grid.arrange(p1, p2, p3, p4, nrow = 2) 
+
+
+# Model selection
+# select_gamma = select(x, ncomp = 1:3, family = 'gamma')
+# plot(select_gamma)
+# select_weibull = select(x, ncomp = 1:3, family = 'weibull')
+# plot(select_weibull)
 
 
 # SOLVE INTERSECTION
@@ -190,7 +237,7 @@ p3 <- plot(wmm,
   annotate(geom = 'segment', x = 0.87, xend = 0.87,
            y = 0,yend = 1, linewidth = 1, color = 'tomato', linetype = 1) +
   annotate(geom = 'text', x = intersection_points-0.05, y = 1.5, label = '~0.87') +
-  xlim(c(0,1.15))
+  coord_cartesian(xlim = c(0,1.1), ylim = c(0,5))
   
 p3
 #######################################################################################################

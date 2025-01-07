@@ -183,7 +183,7 @@ idsforrefit = unique(c(idsnose, nonconvergeids))
 # EIH Modified Josh Hatch's 'sample_paths' to sample fitted paths
 pathsims = sample_paths(x = fit, n = 100)
 
-# Get the predictions from the fitted model (the predicted locations at 9 minute intervals)
+# Get the predictions from the fitted model (the predicted locations at the original fitted date time stamps)
 predicted = grab(fit, what = "predicted")
 # give the best fit data a sample number of 0
 predicted$sample = 0

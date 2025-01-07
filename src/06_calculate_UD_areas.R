@@ -104,7 +104,7 @@ perc = c(95, 50)
 # GET AREAS FOR FEMALES
 for (season in 1:length(seasons)){
   
-  FStackR = raster::stack(x = paste0('./data/L3/UD/Hg_PreConstruction_FemaleUDs_', seasons[season],'.grd'))
+  FStackR = raster::stack(x = paste0('./data/L3/UD/UD_rasters/Hg_PreConstruction_FemaleUDs_', seasons[season],'.grd'))
   tmpL = list()
   
   # Calculate volume rasters for each layer in the stack to get individual 
@@ -151,7 +151,7 @@ Fareas = areas
 # GET AREAS FOR FEMALES
 for (season in 1:length(seasons)){
   
-  StackR = raster::stack(x = paste0('./data/L3/UD/Hg_PreConstruction_MaleUDs_', seasons[season],'.grd'))
+  StackR = raster::stack(x = paste0('./data/L3/UD/UD_rasters/Hg_PreConstruction_MaleUDs_', seasons[season],'.grd'))
   
   tmpL = vector('list', nlayers(StackR))
   
